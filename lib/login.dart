@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:gp2/signup.dart';
 
 
 void main() {
@@ -190,8 +191,26 @@ class LoginScreen extends StatelessWidget {
                   TextButton(
                     // Sign Up Functionality
                     onPressed: () {
-                      // Handle sign up
-                    },
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (_, __, ___) => const SignupScreen(),
+                        transitionsBuilder: (_, animation, __, child) {
+                          return SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(1.0, 0.0),
+                              end: Offset.zero,
+                            ).animate(CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOutCubic,
+                            )),
+                            child: child,
+                          );
+                        },
+                        transitionDuration: const Duration(milliseconds: 300),
+                      ),
+                    );
+                  },
                    
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero, // Removes padding around the text

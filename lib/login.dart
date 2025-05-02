@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gp2/signup.dart';
-
+import 'package:gp2/forgot_password.dart';
+import 'api_service.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-   const MyApp({super.key});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,224 +18,333 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         scaffoldBackgroundColor: const Color.fromRGBO(255, 255, 255, 1)
       ),
-      home:  LoginScreen(),
+      home: const LoginScreen(),
     );
   }
 }
 
-class LoginScreen extends StatelessWidget {
-   const LoginScreen({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isLoading = false;
+  bool _obscurePassword = true;
+
+  double getResponsiveHeight(BuildContext context, double percentage) {
+    return MediaQuery.of(context).size.height * (percentage / 100);
+  }
+
+  double getResponsiveWidth(BuildContext context, double percentage) {
+    return MediaQuery.of(context).size.width * (percentage / 100);
+  }
+
+  double getResponsiveFontSize(BuildContext context, double baseSize) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    return baseSize * (screenWidth / 375); // 375 is base width for design
+  }
+
+  Future<void> _handleLogin() async {
+    if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all fields')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await ApiService.login(
+        _usernameController.text.trim(),
+        _passwordController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      if (response['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login successful!')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response['message'] ?? 'Login failed')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final padding = MediaQuery.of(context).padding;
+    
     return Scaffold(
-      body: 
-      Wrap(
-        
-        children: [
-        Center(
-                child: Container(
-                  width: double.infinity,
-                  height: 250,
-                  color:  Color.fromRGBO(243, 249, 241, 1),
-                  alignment: Alignment.bottomCenter,
-                  // Replace with your logo image
-                child:Image.asset('images/fnan1.png'),
-                )
-              ),
-        Padding(
-          padding:  EdgeInsets.only(left: 24.0, right: 24),
+      body: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: screenHeight - padding.top - padding.bottom,
+          ),
           child: Column(
-            
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-  
-              // Welcome Back & 
-              SizedBox(height: 30),
-              Text(
-                'Welcome back',
-                style: GoogleFonts.inder(
-                  fontSize: 35,
-                  color: Color.fromRGBO(10, 31, 68, 1),
-                ),       
-              ),
-              Text(
-                'Login to your account',
-                style: GoogleFonts.inder(
-                  fontSize: 16,
-                  color: const Color.fromRGBO(66, 66, 66, 0.31)
-                ),
-              ),
-
-              // Name TextField
-              SizedBox(height: 40),
-              Text(
-                'Name',
-                style: TextStyle(
-                  color: Color.fromRGBO(126, 131, 137, 1),
-                ),
-              ),
-              SizedBox(height: 8),
               Container(
-                decoration: BoxDecoration(
-                  color: const Color.fromRGBO(242, 242, 242, 1),
-                  borderRadius: BorderRadius.circular(32),
-                ),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Enter your name',
-                    hintStyle: TextStyle(
-                      color: const Color.fromRGBO(158, 158, 158, 1),
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  ),
+                width: screenWidth,
+                height: getResponsiveHeight(context, 30),
+                color: const Color.fromRGBO(243, 249, 241, 1),
+                alignment: Alignment.bottomCenter,
+                child: Image.asset(
+                  'images/fnan1.png',
+                  height: getResponsiveHeight(context, 25),
+                  fit: BoxFit.contain,
                 ),
               ),
-
-              SizedBox(height: 20), // spacing between text fields
-
-              // Password TextField
-              Text(
-                'Password',
-                style: TextStyle(
-                  color: Color.fromRGBO(126, 131, 137, 1),
-
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: getResponsiveWidth(context, 6),
+                  vertical: getResponsiveHeight(context, 2),
                 ),
-              ),
-              SizedBox(height: 8),
-              Container(
-                  decoration: BoxDecoration(
-                  color: const Color.fromRGBO(242, 242, 242, 1),
-                  borderRadius: BorderRadius.circular(32),
-                ),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Enter your password',
-                    hintStyle: TextStyle(
-                      color: Colors.grey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: getResponsiveHeight(context, 2)),
+                    Text(
+                      'Welcome back',
+                      style: GoogleFonts.inder(
+                        fontSize: getResponsiveFontSize(context, 35),
+                        color: const Color.fromRGBO(10, 31, 68, 1),
+                      ),       
                     ),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  ),
-                  obscureText: true,
-                  ),
-                ),
+                    Text(
+                      'Login to your account',
+                      style: GoogleFonts.inder(
+                        fontSize: getResponsiveFontSize(context, 16),
+                        color: const Color.fromRGBO(66, 66, 66, 0.31)
+                      ),
+                    ),
+
+                    SizedBox(height: getResponsiveHeight(context, 8)),
+                    Text(
+                      'Name',
+                      style: TextStyle(
+                        color: Color.fromRGBO(126, 131, 137, 1),
+                        fontSize: getResponsiveFontSize(context, 14),
+                      ),
+                    ),
+                    SizedBox(height: getResponsiveHeight(context, 1)),
+                    Container(
+                      width: screenWidth,
+                      decoration: BoxDecoration(
+                        color: const Color.fromRGBO(242, 242, 242, 1),
+                        borderRadius: BorderRadius.circular(32),
+                      ),
+                      child: TextField(
+                        controller: _usernameController,
+                        style: TextStyle(fontSize: getResponsiveFontSize(context, 16)),
+                        decoration: InputDecoration(
+                          hintText: 'Enter your name',
+                          hintStyle: TextStyle(
+                            color: const Color.fromRGBO(158, 158, 158, 1),
+                            fontSize: getResponsiveFontSize(context, 16),
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: getResponsiveWidth(context, 4),
+                            vertical: getResponsiveHeight(context, 1.5),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: getResponsiveHeight(context, 3)),
+                    Text(
+                      'Password',
+                      style: TextStyle(
+                        color: Color.fromRGBO(126, 131, 137, 1),
+                        fontSize: getResponsiveFontSize(context, 14),
+                      ),
+                    ),
+                    SizedBox(height: getResponsiveHeight(context, 1)),
+                    Container(
+                      width: screenWidth,
+                      decoration: BoxDecoration(
+                        color: const Color.fromRGBO(242, 242, 242, 1),
+                        borderRadius: BorderRadius.circular(32),
+                      ),
+                      child: TextField(
+                        controller: _passwordController,
+                        style: TextStyle(fontSize: getResponsiveFontSize(context, 16)),
+                        decoration: InputDecoration(
+                          hintText: 'Enter your password',
+                          hintStyle: TextStyle(
+                            color: Colors.grey,
+                            fontSize: getResponsiveFontSize(context, 16),
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: getResponsiveWidth(context, 4),
+                            vertical: getResponsiveHeight(context, 1.5),
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                              color: Colors.grey,
+                              size: getResponsiveFontSize(context, 24),
+                            ),
+                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          ),
+                        ),
+                        obscureText: _obscurePassword,
+                      ),
+                    ),
             
-              SizedBox(height: 8), // spacing between text fields
-
-              // Forgot Password Button
-              Align(
-                alignment: Alignment.centerRight, // Align to the right
-                child: TextButton(
-
-                  // Forgot Password Functionality
-                  onPressed: () {
-                    // Handle forgot password logic here
-                  },
-                  child: Text(
-                    'Forgot your password?',
-                    style: TextStyle(
-                      color:  Color.fromRGBO(0, 55, 166, 1),
-                      fontWeight: FontWeight.bold,
-                      
-                    ),
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 20), // spacing between text fields
-
-              // Login Button
-              Center(
-                child:
-                SizedBox(
-                width: 305,
-                height: 45,
-                child: ElevatedButton(
-
-                  // Login Functionality
-                  onPressed: () {
-                    // Handle login logic here
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color.fromRGBO(0, 55, 166, 1),
-                    padding:  EdgeInsets.all(10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(39),
-                    ),
-                  ),
-                  child: Text('Login',style: GoogleFonts.inder(
-                    fontSize: 15,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold
-                    ),),
-                ), 
-              ),
-              
-              ),
-
-              SizedBox(height: 20), // spacing between text fields
-
-              // Sign Up Button
-              Center(
-                child:
-                Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Don't have an account? ",
-                    style: TextStyle(
-                      color: const Color.fromRGBO(196, 196, 196, 1),
-                    ),
-                  ),
-                  TextButton(
-                    // Sign Up Functionality
-                    onPressed: () {
-                    Navigator.push(
-                      context,
-                      PageRouteBuilder(
-                        pageBuilder: (_, __, ___) => const SignupScreen(),
-                        transitionsBuilder: (_, animation, __, child) {
-                          return SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(1.0, 0.0),
-                              end: Offset.zero,
-                            ).animate(CurvedAnimation(
-                              parent: animation,
-                              curve: Curves.easeOutCubic,
-                            )),
-                            child: child,
+                    SizedBox(height: getResponsiveHeight(context, 3)),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            PageRouteBuilder(
+                              pageBuilder: (_, __, ___) => const ForgotPasswordScreen(),
+                              transitionsBuilder: (_, animation, __, child) {
+                                return SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: const Offset(1.0, 0.0),
+                                    end: Offset.zero,
+                                  ).animate(CurvedAnimation(
+                                    parent: animation,
+                                    curve: Curves.easeOutCubic,
+                                  )),
+                                  child: child,
+                                );
+                              },
+                              transitionDuration: const Duration(milliseconds: 250),
+                            ),
                           );
                         },
-                        transitionDuration: const Duration(milliseconds: 300),
-                      ),
-                    );
-                  },
-                   
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero, // Removes padding around the text
-                      minimumSize: Size(0, 0), // Optionally reduce minimum button size
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap, // Fit tap target to content
-                    ),
-                   
-                    child: Text(
-                      'Sign up',
-                      style: TextStyle(
-                        color: Color.fromRGBO(0, 55, 166, 1),
-                        fontSize: 15,
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(0, 0),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          'Forgot your password?',
+                          style: TextStyle(
+                            color: Color.fromRGBO(0, 55, 166, 1),
+                            fontSize: getResponsiveFontSize(context, 15),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              )
+
+                    SizedBox(height: getResponsiveHeight(context, 3)),
+                    
+                    Center(
+                      child: SizedBox(
+                        width: getResponsiveWidth(context, 80),
+                        height: getResponsiveHeight(context, 5),
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _handleLogin,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color.fromRGBO(0, 55, 166, 1),
+                            padding: EdgeInsets.symmetric(
+                              vertical: getResponsiveHeight(context, 1),
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(39),
+                            ),
+                          ),
+                          child: _isLoading
+                              ? SizedBox(
+                                  height: getResponsiveHeight(context, 3),
+                                  width: getResponsiveHeight(context, 3),
+                                  child: const CircularProgressIndicator(color: Colors.white),
+                                )
+                              : Text(
+                                  'Login',
+                                  style: GoogleFonts.inder(
+                                    fontSize: getResponsiveFontSize(context, 15),
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold
+                                  ),
+                                ),
+                        ), 
+                      ),
+                    ),
+
+                    SizedBox(height: getResponsiveHeight(context, 7)),
+                    Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Don't have an account? ",
+                            style: TextStyle(
+                              color: const Color.fromRGBO(196, 196, 196, 1),
+                              fontSize: getResponsiveFontSize(context, 14),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder: (_, __, ___) => const SignupScreen(),
+                                  transitionsBuilder: (_, animation, __, child) {
+                                    return SlideTransition(
+                                      position: Tween<Offset>(
+                                        begin: const Offset(1.0, 0.0),
+                                        end: Offset.zero,
+                                      ).animate(CurvedAnimation(
+                                        parent: animation,
+                                        curve: Curves.easeOutCubic,
+                                      )),
+                                      child: child,
+                                    );
+                                  },
+                                  transitionDuration: const Duration(milliseconds: 300),
+                                ),
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(0, 0),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: Text(
+                              'Sign up',
+                              style: TextStyle(
+                                color: Color.fromRGBO(0, 55, 166, 1),
+                                fontSize: getResponsiveFontSize(context, 15),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: getResponsiveHeight(context, 2)),
+                  ],
+                ),
               ),
             ],
           ),
         ),
-        ],
-      )
-      
+      ),
     );
   }
 }

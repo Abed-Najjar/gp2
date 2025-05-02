@@ -16,7 +16,7 @@ class ApiService {
     );
     return jsonDecode(response.body);
   }
-
+  
   // Signup method
   static Future<Map<String, dynamic>> signup(String name, String email, String password) async {
     final response = await http.post(
@@ -29,5 +29,25 @@ class ApiService {
       }),
     );
     return jsonDecode(response.body);
+  }
+
+  // Forgot Password method
+  static Future<Map<String, dynamic>> forgotPassword(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/forgot-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': email,
+        }),
+      );
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'An error occurred: ${e.toString()}',
+      };
+    }
   }
 }
